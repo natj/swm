@@ -16,7 +16,7 @@ where `V = u + v`, `u`/`v` are the eastward/northwards velocities `f` is the Cor
 Spherical harmonic transformation library [shtns](https://bitbucket.org/nschaeff/shtns)
 
 ```
-./configure --enable.python
+./configure --enable-python
 make
 make install
 ```
