@@ -17,7 +17,7 @@ class Spharmt(object):
 		nlons:  number of longitudes
 		nlats:  number of latitudes"""
 		self._shtns = shtns.sht(ntrunc, ntrunc, 1, \
-								shtns.sht_orthonormal+shtns.SHT_NO_CS_PHASE)
+				        shtns.sht_orthonormal+shtns.SHT_NO_CS_PHASE)
 		if gridtype == 'gaussian':
 			#self._shtns.set_grid(nlats,nlons,shtns.sht_gauss_fly|shtns.SHT_PHI_CONTIGUOUS,1.e-10)
 			self._shtns.set_grid(nlats,nlons,shtns.sht_quick_init|shtns.SHT_PHI_CONTIGUOUS,1.e-10)
@@ -36,23 +36,28 @@ class Spharmt(object):
 		self.rsphere = rsphere
 		self.lap = self.lap/rsphere**2
 		self.invlap = self.invlap*rsphere**2
-	def grdtospec(self,data):
+
+	def grid2sph(self,data):
 		"""compute spectral coefficients from gridded data"""
 		return self._shtns.analys(data)
-	def spectogrd(self,dataspec):
+
+	def sph2grid(self,dataSpec):
 		"""compute gridded data from spectral coefficients"""
-		return self._shtns.synth(dataspec)
-	def getuv(self,vrtspec,divspec):
+		return self._shtns.synth(dataSpec)
+
+	def getuv(self,vortSpec,divSpec):
 		"""compute wind vector from spectral coeffs of vorticity and divergence"""
-		return self._shtns.synth((self.invlap/self.rsphere)*vrtspec, (self.invlap/self.rsphere)*divspec)
-	def getvrtdivspec(self,u,v):
+		return self._shtns.synth((self.invlap/self.rsphere)*vortSpec, (self.invlap/self.rsphere)*divSpec)
+
+	def getVortDivSpec(self,u,v):
 		"""compute spectral coeffs of vorticity and divergence from wind vector"""
-		vrtspec, divspec = self._shtns.analys(u, v)
-		return self.lap*self.rsphere*vrtspec, self.lap*self.rsphere*divspec
-	def getgrad(self,divspec):
+		vortSpec, divSpec = self._shtns.analys(u, v)
+		return self.lap*self.rsphere*vortSpec, self.lap*self.rsphere*divSpec
+
+	def getGrad(self,divSpec):
 		"""compute gradient vector from spectral coeffs"""
-		vrtspec = np.zeros(divspec.shape, dtype=np.complex)
-		u,v = self._shtns.synth(vrtspec,divspec)
+		vortSpec = np.zeros(divSpec.shape, dtype=np.complex)
+		u,v = self._shtns.synth(vortSpec,divSpec)
 		return u/self.rsphere, v/self.rsphere
 
 
