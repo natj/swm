@@ -1,9 +1,26 @@
+# Simple spherical harmonic shallow water model toy code based on shtns library.
+#
+# 
+# Refs:
+#  "non-linear barotropically unstable shallow water test case"
+#  example provided by Jeffrey Whitaker
+#  https://gist.github.com/jswhit/3845307
+#
+#  Galewsky et al (2004, Tellus, 56A, 429-440)
+#  "An initial-value problem for testing numerical models of the global
+#  shallow-water equations" DOI: 10.1111/j.1600-0870.2004.00071.x
+#  http://www-vortex.mcs.st-and.ac.uk/~rks/reprints/galewsky_etal_tellus_2004.pdf
+#  
+#  shtns/examples/shallow_water.py
+
+
 import numpy as np
 import shtns
 import matplotlib.pyplot as plt
 import time
 from spharmt import Spharmt 
 import os
+
 
 
 
