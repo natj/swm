@@ -30,13 +30,18 @@ import os
 
 ##################################################
 #prepare figure etc
-fig = plt.figure(figsize=(8,5))
-gs = plt.GridSpec(1, 10)
+fig = plt.figure(figsize=(8,12))
+gs = plt.GridSpec(5, 10)
 gs.update(hspace = 0.2)
 gs.update(wspace = 0.4)
 
 axs = []
 axs.append( plt.subplot(gs[0, 0:10]) )
+axs.append( plt.subplot(gs[1, 0:10]) )
+axs.append( plt.subplot(gs[2, 0:10]) )
+axs.append( plt.subplot(gs[3, 0:10]) )
+axs.append( plt.subplot(gs[4, 0:10]) )
+
 
 
 directory = 'out/'
@@ -80,6 +85,14 @@ x = Spharmt(nlons,nlats,ntrunc,rsphere,gridtype='gaussian')
 lons,lats = np.meshgrid(x.lons, x.lats)
 f = 2.*omega*np.sin(lats) # Coriolis
 
+# guide grids for plotting
+lons1d = (180./np.pi)*x.lons-180.
+lats1d = (180./np.pi)*x.lats
+
+#lonsDeg = (180./np.pi)*x.lons-180.
+#latsDeg = (180./np.pi)*x.lats
+lonsDeg = (180./np.pi)*lons-180.
+latsDeg = (180./np.pi)*lats
 
 # zonal jet
 vg = np.zeros((nlats,nlons), np.float)
@@ -127,64 +140,74 @@ nold = 2
 
 
 
-def visualizeMap(ax):
+def visualizeMap(ax, data, vmin=0.0, vmax=1.0, title=""):
 
     """ 
-    make a contour plot of potential vorticity in the Northern Hem.
+    make a contour map plot of the incoming data array (in grid)
     """
     ax.cla()
-    
-    # dimensionless PV
-    pvg = (0.5*hbar*grav/omega)*(vortg+f)/phig
-    print('max/min PV',pvg.min(), pvg.max())
 
-    lons1d = (180./np.pi)*x.lons-180.
-    lats1d = (180./np.pi)*x.lats
-    levs = np.arange(-0.2,1.801,0.1)
-
+    print title, " min/max:", data.min(), data.max()
 
     #colorbar
-    #cb=plt.colorbar(cs,orientation='horizontal') # add colorbar
+    #cb=plt.colorbar(cs,orientation='vertical') # add colorbar
     #cb.set_label('potential vorticity')
 
-
     #make fancy 
-    ax.set_xlabel('longitude')
-    ax.set_ylabel('latitude')
-    ax.set_xticks(np.arange(-180,181,60))
-    ax.set_yticks(np.arange(-5,81,20))
+    ax.minorticks_on()
+    ax.set_ylabel(title)
 
-    cs=ax.contourf(
-            lons1d,
-            lats1d,
-            pvg,
-            levs,cmap='plasma',
-            extend='both'
+    #ax.set_xlabel('longitude')
+    #ax.set_ylabel('latitude')
+
+    ax.set_xticks(np.arange(-180,181,60))
+    ax.set_yticks(np.linspace(-90,90,10))
+
+    ax.pcolormesh(
+            lonsDeg,
+            latsDeg,
+            data,
+            vmin=vmin,
+            vmax=vmax,
+            cmap='plasma',
             )
 
     #ax.axis('equal')
-    ax.set_ylim(0,lats1d[0])
-    ax.set_title('hour {:6.2f}'.format( t/3600.) )
 
 
+def visualizeMapVecs(ax, xx, yy, title=""):
 
-# TODO
-def visualizeSphere(ax, vortg, phig):
     """ 
-    make a sphere projection of the vorticity
+    make a quiver map plot of the incoming vector field (in grid)
     """
     ax.cla()
-    ax.axis('off')
-    
-    # dimensionless PV
-    pvg = (0.5*hbar*grav/omega)*(vortg+f)/phig
-    print('max/min PV',pvg.min(), pvg.max())
+    ax.minorticks_on()
+    ax.set_ylabel(title)
+    ax.set_xticks(np.arange(-180,181,60))
+    ax.set_yticks(np.linspace(-90,90,10))
 
-    lons1d = (180./np.pi)*x.lons-180.
-    lats1d = (180./np.pi)*x.lats
-    levs = np.arange(-0.2,1.801,0.1)
+    M = np.hypot(xx, yy)
 
+    print title, " min/max vec len: ", M.min(), M.max()
 
+    sk = 10
+    ax.quiver(
+            lonsDeg[::sk, ::sk],
+            latsDeg[::sk, ::sk],
+            xx[::sk, ::sk], yy[::sk, ::sk],
+            #M[::sk, ::sk],
+            pivot='mid',
+            units='x',
+            width=1.0,
+            scale=8.0,
+            )
+
+    #ax.scatter(
+    #        lonsDeg[::sk, ::sk],
+    #        latsDeg[::sk, ::sk],
+    #        color='k',
+    #        s=5,
+    #          )
 
 
 
@@ -198,8 +221,11 @@ for ncycle in range(itmax+1):
 
     # get vort,u,v,phi on grid
     vortg = x.sph2grid(vortSpec)
+    phig  = x.sph2grid(phiSpec)
+    divg  = x.sph2grid(divSpec)
+
     ug,vg = x.getuv(vortSpec,divSpec)
-    phig = x.sph2grid(phiSpec)
+
     print('t=%6.2f hours: min/max %6.2f, %6.2f' % (t/3600.,vg.min(), vg.max()))
 
 
@@ -254,10 +280,25 @@ for ncycle in range(itmax+1):
 
 
     #plot & save
-    if (ncycle % 50 == 0):
-        visualizeMap(axs[0])
-        #visualizeSphere(axs[1])
+    if (ncycle % 10 == 0):
 
+        visualizeMap(axs[0], vortg, -1.0e-4, 1.0e-4, title="Vorticity")
+        visualizeMap(axs[1], divg,  -4.0e-4, 4.0e-4, title="Divergence")
+        visualizeMap(axs[2], phig,   8.0e4,  1.0e5,  title="$\\Phi$")
+        visualizeMapVecs(axs[3], ug, vg, title="Velocities")
+
+
+        # dimensionless potential vorticity
+        pvg = (0.5*hbar*grav/omega)*(vortg+f)/phig
+        print('max/min PV',pvg.min(), pvg.max())
+        levs = np.arange(-0.2, 1.8, 0.1)
+        visualizeMap(axs[4], pvg, -0.2, 1.8, title="Potential Vort.")
+
+
+
+
+
+        axs[0].set_title('hour {:6.2f}'.format( t/3600.) )
         scycle = str(ncycle).rjust(6, '0')
         plt.savefig(directory+'swater'+scycle+'.png' ) #, bbox_inches='tight') 
 
